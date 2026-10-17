@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="stats">
+  <div class="card"><div class="num">{{ stats.total }}</div><div>Всего</div></div>
+  <div class="card ok"><div class="num">{{ stats.active }}</div><div>Активных</div></div>
+  <div class="card warn"><div class="num">{{ stats.expiring }}</div><div>Истекают за 24ч</div></div>
+  <div class="card bad"><div class="num">{{ stats.expired }}</div><div>Истекли</div></div>
+</section>
+<section class="users">
+  <h2>Пользователи</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Email</th><th>Действует до</th><th>Статус</th><th>Действия</th></tr></thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.tg_id }}</td>
+        <td><code>{{ u.email }}</code></td>
+        <td>{{ u.expiry }}</td>
+        <td><span class="badge {{ u.status }}">{{ u.status }}</span></td>
+        <td class="actions">
+          <input type="number" class="days" value="30" min="1" max="365">
+          <button onclick="extend({{ u.tg_id }}, this)">+дней</button>
+          <button class="danger" onclick="toggle({{ u.tg_id }}, false, this)">Выкл</button>
+          <button class="ok" onclick="toggle({{ u.tg_id }}, true, this)">Вкл</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+<script>
+async function extend(tgId, btn) {
+  const days = btn.parentElement.querySelector('.days').value;
+  const fd = new FormData(); fd.append('days', days);
+  btn.disabled = true;
+  const r = await fetch(`/api/extend/${tgId}`, { method: 'POST', body: fd });
+  btn.disabled = false;
+  if (r.ok) location.reload(); else alert('Ошибка');
+}
+async function toggle(tgId, enable, btn) {
+  btn.disabled = true;
+  const r = await fetch(`/api/${enable ? 'enable' : 'disable'}/${tgId}`, { method: 'POST' });
+  btn.disabled = false;
+  if (r.ok) location.reload();
+}
+</script>
+{% endblock %}

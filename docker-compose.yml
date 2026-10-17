@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  vpnbot:
+    build: .
+    container_name: vpnbot
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # Пробрасываем порт для веб-панели
+    volumes:
+      - ./bot.db:/app/bot.db # Сохраняем базу данных на сервере
+      - ./.env:/app/.env     # Прокидываем файл конфигурации
+    environment:
+      - TZ=Europe/Moscow     # Ваше часовой пояс для правильной работы уведомлений
