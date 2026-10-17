@@ -1,4 +1,3 @@
-cat << 'EOF' > README.md
 # 🤖 VPN Telegram Bot для панели 3x-ui
 
 Готовый, простой в развертывании Telegram-бот для продажи и управления VPN-подписками через панель [3x-ui](https://github.com/MHSanaei/3x-ui).
