@@ -58,18 +58,44 @@ async def status_handler(cb: CallbackQuery):
         return
     try: expiry_text = datetime.fromisoformat(client.expiry_time).strftime("%d.%m.%Y %H:%M")
     except: expiry_text = "—"
+    
     status = "🟢 Активна" if client.enable else "🔴 Отключена"
-    text = f"<b>Ваша подписка</b>\nСтатус: {status}\nДействует до: {expiry_text}"
+    
+    text = (
+        f"👤 <b>Ваш профиль:</b> <code>{email}</code>\n"
+        f"📅 <b>Действует до:</b> {expiry_text}\n"
+        f"📡 <b>Статус:</b> {status}\n\n"
+        f"🔗 <b>Ваша ссылка для подключения:</b>\n"
+    )
+    
     links = await panel.get_links(email)
     if links:
-        text += f"\n\n🔗 <b>Ссылка:</b>\n<code>{links[0]}</code>"
+        text += f"<code>{links[0]}</code>\n\n"
+        text += (
+            "<i>👆 Нажмите на ссылку выше, чтобы скопировать её.</i>\n\n"
+            "📱 <b>Инструкция по подключению:</b>\n"
+            "1. Скопируйте ссылку нажатием на неё.\n"
+            "2. Скачайте приложение из списка ниже:\n"
+            "   • <a href='https://apps.apple.com/ru/app/streisand/id6450534064'>Streisand (iOS)</a>\n"
+            "   • <a href='https://play.google.com/store/apps/details?id=com.happproxy'>Happ (Android)</a>\n"
+            "   • <a href='https://play.google.com/store/apps/details?id=io.nekohasekai.sagernet'>NekoBox (Android)</a>\n"
+            "   • <a href='https://github.com/hiddify/hiddify-next/releases'>Hiddify (Windows/Mac)</a>\n"
+            "3. В приложении выберите «Импорт из буфера обмена» (или нажмите «+»).\n"
+            "4. Готово! Нажмите «Подключиться»."
+        )
         qr = qrcode.QRCode(version=1, box_size=10, border=4)
         qr.add_data(links[0]); qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
         bio = BytesIO(); img.save(bio, "PNG"); bio.seek(0)
-        await cb.message.answer_photo(photo=BufferedInputFile(bio.read(), filename="qr.png"), caption=text)
+        
+        await cb.message.answer_photo(
+            photo=BufferedInputFile(bio.read(), filename="qr.png"), 
+            caption=text, 
+            parse_mode="HTML", 
+            disable_web_page_preview=True
+        )
     else:
-        await cb.message.answer(text)
+        await cb.message.answer(text + "\n⚠️ Не удалось сгенерировать ссылку.")
     await cb.answer()
 
 @dp.callback_query(F.data == "buy")
@@ -88,7 +114,7 @@ async def payment_handler(cb: CallbackQuery):
     if days not in prices: return
     await bot.send_invoice(
         chat_id=cb.from_user.id, title=f"VPN на {days} дней", description="Продление подписки",
-        payload=f"extend_{days}", provider_token="", currency="XTR",
+        payload=f"extend_{days}", currency="XTR",
         prices=[LabeledPrice(label="VPN", amount=prices[days])]
     )
     await cb.answer()
